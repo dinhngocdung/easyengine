@@ -47,7 +47,12 @@ jobs:
           COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
           cd "$GITHUB_WORKSPACE"
+          # Đặt quyền truy cập cho GITHUB_TOKEN
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          # Cấu hình Composer
           composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config --global github-protocols https
+          # Cập nhật dependencies
           composer update easyengine/site-command --no-dev --no-progress --no-interaction
           composer install --no-dev --no-progress --no-interaction
 
@@ -127,12 +132,18 @@ jobs:
       run: |
         sudo curl -L https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
+
     - name: Install dependencies
       env:
         COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
       run: |
         cd "$GITHUB_WORKSPACE"
+        # Đặt quyền truy cập cho GITHUB_TOKEN
+        git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+        # Cấu hình Composer
         composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+        composer config --global github-protocols https
+        # Cập nhật dependencies
         composer update easyengine/site-command --no-dev --no-progress --no-interaction
         composer install --no-dev --no-progress --no-interaction
 
