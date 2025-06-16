@@ -1,11 +1,16 @@
 on:
   pull_request:
   push:
+    # Bạn có thể giữ hoặc xóa 'tags' và 'branches' tùy theo nhu cầu
+    # Nếu bạn chỉ muốn build khi push lên các nhánh cụ thể của bạn (ví dụ: develop, main)
+    # thì hãy giữ các nhánh đó. Nếu không, bạn có thể xóa tags.
     tags:
       - "v*.*.*"
     branches:
       - master
       - develop
+  # Bạn có thể giữ 'schedule' nếu muốn các bản build nightly của riêng bạn,
+  # hoặc xóa nếu không cần.
   schedule:
     - cron:  '30 3 * * *'
 
@@ -44,18 +49,18 @@ jobs:
       - name: Install dependencies
         run: |
           cd "$GITHUB_WORKSPACE"
-          # Run composer install for master else update.
-          if [[ "$GITHUB_REF" = "refs/heads/master" ]] || [[ "$GITHUB_REF" = "refs/tags/"* ]]; then
-              composer install --no-dev --no-progress --no-interaction
-          else
-              sed -i 's/\(easyengine\/.*\):\ \".*\"/\1:\ \"dev-develop\"/' composer.json
-              composer update --prefer-dist --no-dev --no-progress --no-interaction
-          fi
+          # Dòng này có thể được đơn giản hóa vì bạn đã cấu hình 'repositories' trong composer.json
+          # để Composer tự tìm bản fork của bạn.
+          # Composer sẽ tự động ưu tiên bản fork của bạn nếu đã được cấu hình đúng trong composer.json.
+          # Bạn có thể dùng composer install --no-dev để có bản build nhanh hơn cho PHAR.
+          composer install --no-dev --no-progress --no-interaction
 
       - name: Setup EE version
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         run: |
           cd "$GITHUB_WORKSPACE"
+          # Giữ nguyên logic này nếu bạn muốn các bản build của mình có phiên bản "nightly"
+          # dựa trên commit hash.
           if [[ "$GITHUB_REF" != $DEPLOY_BRANCH ]]; then
             CLI_VERSION=$(head -n 1 VERSION)
             CLI_VERSION="$(echo $CLI_VERSION | xargs)"
@@ -64,6 +69,8 @@ jobs:
             echo "$CLI_VERSION" > VERSION
           fi
         env:
+          # Đảm bảo DEPLOY_BRANCH phù hợp với nhánh chính của bạn nếu bạn có.
+          # Ví dụ: nếu nhánh chính của bạn là 'main', hãy đổi thành 'refs/heads/main'.
           DEPLOY_BRANCH: "refs/heads/master"
 
 
@@ -84,8 +91,12 @@ jobs:
         with:
           name: easyengine-phar
           path: easyengine.phar
+          # Thêm 'retention-days' nếu bạn muốn giữ artifact trong thời gian cụ thể
+          # retention-days: 7
+
 
   test: #----------------------------------------------------------------------
+    # Giữ nguyên job 'test' này. Nó vẫn hữu ích để kiểm tra các thay đổi của bạn.
     runs-on: ubuntu-latest
     needs: [build]
     name: Behat Tests - PHP ${{ matrix.php }}
@@ -133,13 +144,9 @@ jobs:
     - name: Install dependencies
       run: |
         cd "$GITHUB_WORKSPACE"
-        # Run composer install for master else update.
-        if [[ "$GITHUB_REF" = "refs/heads/master" ]]; then
-            composer install --prefer-dist --no-progress --no-interaction
-        else
-            sed -i 's/\(easyengine\/.*\):\ \".*\"/\1:\ \"dev-develop\"/' composer.json
-            composer update --prefer-dist --no-progress --no-interaction
-        fi
+        # Tương tự như job build, bạn có thể đơn giản hóa dòng này
+        # vì cấu hình 'repositories' trong composer.json đã xử lý việc kéo bản fork của bạn.
+        composer install --prefer-dist --no-progress --no-interaction
 
     - name: Test
       shell: 'script -q -e -c "bash {0}"'
@@ -170,12 +177,11 @@ jobs:
         [[ -f "/opt/easyengine/logs/ee.log" ]] && cat /opt/easyengine/logs/ee.log || echo 'No run log.'
 
   deploy: #-----------------------------------------------------------------------
+    # Vô hiệu hóa hoặc xóa toàn bộ job 'deploy' này
+    # vì nó cố gắng push vào repo chính thức của EasyEngine.
+    # Để vô hiệu hóa, bạn có thể thêm 'if: false' hoặc xóa toàn bộ job.
+    if: false # Hoặc có thể xóa toàn bộ job 'deploy'
     name: Deploy Phar
-    if: |
-      github.repository_owner == 'EasyEngine' && (
-        startsWith(github.ref, 'refs/tags/') ||
-        github.ref == 'refs/heads/develop'
-      )
     runs-on: ubuntu-latest
     needs: [build, test]
 
@@ -228,10 +234,11 @@ jobs:
           repository: easyengine/easyengine-builds
 
   release: #-----------------------------------------------------------------------
+    # Vô hiệu hóa hoặc xóa toàn bộ job 'release' này
+    # vì nó cố gắng tạo release trong repo chính thức của EasyEngine.
+    # Để vô hiệu hóa, bạn có thể thêm 'if: false' hoặc xóa toàn bộ job.
+    if: false # Hoặc có thể xóa toàn bộ job 'release'
     name: Create release
-    if: |
-      github.repository_owner == 'EasyEngine' &&
-      startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs: [build, test]
 
