@@ -64,9 +64,10 @@
         "url": "https://github.com/dinhngocdng/site-command.git"
     }
     ],
+    
     "require": {
         "easyengine/site-command": "dev-develop"
-    }
+    },
 
     "require-dev": {
         "behat/behat": "3.8.1",
