@@ -36,15 +36,11 @@ jobs:
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - name: Set up Composer caching
+      - name: Cache vendor directory
         uses: actions/cache@v3
-        env:
-          cache-name: cache-composer-dependencies
         with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          path: vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.json') }}
 
       - name: Install dependencies
         run: |
@@ -53,20 +49,15 @@ jobs:
           # để Composer tự tìm bản fork của bạn.
           # Composer sẽ tự động ưu tiên bản fork của bạn nếu đã được cấu hình đúng trong composer.json.
           # Bạn có thể dùng composer install --no-dev để có bản build nhanh hơn cho PHAR.
+          composer update easyengine/site-command --no-dev --no-progress --no-interaction
           composer install --no-dev --no-progress --no-interaction
-
       - name: Setup EE version
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         run: |
           cd "$GITHUB_WORKSPACE"
-          # Giữ nguyên logic này nếu bạn muốn các bản build của mình có phiên bản "nightly"
-          # dựa trên commit hash.
           if [[ "$GITHUB_REF" != $DEPLOY_BRANCH ]]; then
             CLI_VERSION=$(head -n 1 VERSION)
-            CLI_VERSION="$(echo $CLI_VERSION | xargs)"
-            CLI_VERSION+="-nightly-$(git rev-parse --short HEAD)"
-            echo $CLI_VERSION > VERSION
-            echo "$CLI_VERSION" > VERSION
+            echo "${CLI_VERSION}-nightly-$(git rev-parse --short HEAD)" > VERSION
           fi
         env:
           # Đảm bảo DEPLOY_BRANCH phù hợp với nhánh chính của bạn nếu bạn có.
@@ -103,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+        php: ['8.0', '8.1', '8.2', '8.3', '8.4']
     steps:
     - name: Check out source code
       uses: actions/checkout@v3
@@ -120,15 +111,11 @@ jobs:
       id: composer-cache
       run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-    - name: Set up Composer caching
+    - name: Cache vendor directory
       uses: actions/cache@v3
-      env:
-        cache-name: cache-composer-dependencies
       with:
-        path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-composer-
+        path: vendor
+        key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.json') }}
 
     - name: Update docker
       run: |
@@ -146,7 +133,8 @@ jobs:
         cd "$GITHUB_WORKSPACE"
         # Tương tự như job build, bạn có thể đơn giản hóa dòng này
         # vì cấu hình 'repositories' trong composer.json đã xử lý việc kéo bản fork của bạn.
-        composer install --prefer-dist --no-progress --no-interaction
+        composer update easyengine/site-command --no-dev --no-progress --no-interaction
+        composer install --no-dev --no-progress --no-interaction
 
     - name: Test
       shell: 'script -q -e -c "bash {0}"'
