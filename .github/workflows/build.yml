@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer install --prefer-dist --no-progress --no-interaction
-          composer update easyengine/site-command easyengine/easyengine --with-all-dependencies
+          composer update easyengine/site-command --with-all-dependencies
 
       - name: Set custom version
         run: |
