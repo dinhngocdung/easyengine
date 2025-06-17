@@ -1,7 +1,10 @@
 {
     "name": "easyengine/easyengine",
     "description": "The command line interface for EasyEngine",
-    "keywords": ["cli", "easyengine"],
+    "keywords": [
+        "cli",
+        "easyengine"
+    ],
     "homepage": "https://easyengine.io",
     "license": "MIT",
     "support": {
@@ -9,9 +12,13 @@
         "source": "https://github.com/easyengine/easyengine",
         "docs": "https://easyengine.io/docs/"
     },
-    "bin": ["bin/ee"],
+    "bin": [
+        "bin/ee"
+    ],
     "config": {
-        "platform": {"php": "7.3"},
+        "platform": {
+            "php": "7.3"
+        },
         "sort-packages": true,
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
@@ -19,6 +26,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+        "type": "vcs",
+        "url": "https://github.com/dinhngocdng/site-command.git"
+        }
+    ],
     "require": {
         "php": ">=7.0",
         "composer/composer": "2.2.24",
@@ -51,16 +64,6 @@
         "wp-cli/mustangostang-spyc": "0.6.3",
         "wp-cli/php-cli-tools": "0.11.10"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/dinhngocdng/site-command.git",
-            "no-api": true
-        }
-    ],
-    "require": {
-        "easyengine/site-command": "dev-develop"
-    },
     "require-dev": {
         "behat/behat": "3.8.1",
         "dealerdirect/phpcodesniffer-composer-installer": "0.7.0",
@@ -72,7 +75,9 @@
         "psy/psysh": "Enhanced shell functionality"
     },
     "autoload": {
-        "psr-0": {"EE\\": "php/"},
+        "psr-0": {
+            "EE\\": "php/"
+        },
         "classmap": [
             "php/class-ee.php",
             "php/class-ee-db.php",
@@ -82,7 +87,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-develop": "1.5.x-dev"
+            "dev-master": "1.5.x-dev"
         }
     }
 }
