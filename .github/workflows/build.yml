@@ -54,9 +54,18 @@ jobs:
         run: |
           php easyengine.phar cli info
 
-      - name: Upload PHAR as release asset
+      - name: Create Git tag
+        id: tag
+        run: |
+          DATE=$(date +%Y%m%d)
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+          echo "TAG=v4.0.0-custom-$DATE-$COMMIT_SHORT" >> $GITHUB_OUTPUT
+          git tag $TAG
+          git push origin $TAG
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: success()
         with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
           files: easyengine.phar
           token: ${{ secrets.GITHUB_TOKEN }}
