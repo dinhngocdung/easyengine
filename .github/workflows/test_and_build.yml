@@ -43,14 +43,19 @@ jobs:
           key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.json') }}
 
       - name: Install dependencies
+        env:
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
           cd "$GITHUB_WORKSPACE"
           
-          # Buộc Composer sử dụng HTTPS thay vì SSH
-          composer config -g github-protocols https
+          # Cấu hình git để sử dụng token
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "https://github.com"
           
-          # Xóa cache cũ nếu có
-          rm -rf ~/.cache/composer/vcs/git-github.com-dinhngocdng-site-command.git
+          # Cấu hình Composer
+          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          
+          # Xóa cache cũ
+          rm -rf ~/.cache/composer/vcs/*
           
           # Cài đặt dependencies
           composer update easyengine/site-command --no-dev --no-progress --no-interaction
@@ -134,14 +139,19 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     - name: Install dependencies
+      env:
+        COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
       run: |
         cd "$GITHUB_WORKSPACE"
         
-        # Buộc Composer sử dụng HTTPS thay vì SSH
-        composer config -g github-protocols https
+        # Cấu hình git để sử dụng token
+        git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "https://github.com"
         
-        # Xóa cache cũ nếu có
-        rm -rf ~/.cache/composer/vcs/git-github.com-dinhngocdng-site-command.git
+        # Cấu hình Composer
+        composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+        
+        # Xóa cache cũ
+        rm -rf ~/.cache/composer/vcs/*
         
         # Cài đặt dependencies
         composer update easyengine/site-command --no-dev --no-progress --no-interaction
