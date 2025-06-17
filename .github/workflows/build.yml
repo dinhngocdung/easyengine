@@ -13,6 +13,11 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
 
+      - name: Clean up composer files
+        run: |
+          rm -f composer.lock
+          rm -rf vendor
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -21,22 +26,13 @@ jobs:
           tools: composer
           extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json
 
-      - name: Setup Composer
-        run: |
-          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.composer/cache
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php-
+      - name: Setup Composer authentication
+        run: composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: |
-          composer install --prefer-dist --no-progress --no-interaction
-          composer update easyengine/site-command --with-all-dependencies
+          composer require "easyengine/site-command:dev-develop" --no-update
+          composer update --prefer-dist --no-progress --no-interaction --with-all-dependencies
 
       - name: Set custom version
         run: |
