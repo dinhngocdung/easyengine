@@ -51,15 +51,13 @@
         "wp-cli/mustangostang-spyc": "0.6.3",
         "wp-cli/php-cli-tools": "0.11.10"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/dinhngocdng/site-command.git"
-        }
-    ],
-    "require": {
-        "easyengine/site-command": "dev-develop"
-    },
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/dinhngocdng/site-command.git",
+        "no-api": true  // Bắt buộc sử dụng HTTPS thay vì API
+    }
+],
     "require-dev": {
         "behat/behat": "3.8.1",
         "dealerdirect/phpcodesniffer-composer-installer": "0.7.0",

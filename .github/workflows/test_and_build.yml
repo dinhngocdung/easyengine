@@ -45,7 +45,14 @@ jobs:
       - name: Install dependencies
         run: |
           cd "$GITHUB_WORKSPACE"
-          # Sử dụng HTTPS bình thường (không cần token)
+          
+          # Buộc Composer sử dụng HTTPS thay vì SSH
+          composer config -g github-protocols https
+          
+          # Xóa cache cũ nếu có
+          rm -rf ~/.cache/composer/vcs/git-github.com-dinhngocdng-site-command.git
+          
+          # Cài đặt dependencies
           composer update easyengine/site-command --no-dev --no-progress --no-interaction
           composer install --no-dev --no-progress --no-interaction
 
@@ -129,7 +136,14 @@ jobs:
     - name: Install dependencies
       run: |
         cd "$GITHUB_WORKSPACE"
-        # Sử dụng HTTPS bình thường (không cần token)
+        
+        # Buộc Composer sử dụng HTTPS thay vì SSH
+        composer config -g github-protocols https
+        
+        # Xóa cache cũ nếu có
+        rm -rf ~/.cache/composer/vcs/git-github.com-dinhngocdng-site-command.git
+        
+        # Cài đặt dependencies
         composer update easyengine/site-command --no-dev --no-progress --no-interaction
         composer install --no-dev --no-progress --no-interaction
 
