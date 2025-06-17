@@ -54,10 +54,12 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/dinhngocdng/site-command.git",
-            "no-api": true
+            "url": "https://github.com/dinhngocdng/site-command.git"
         }
     ],
+    "require": {
+        "easyengine/site-command": "dev-develop"
+    },
     "require-dev": {
         "behat/behat": "3.8.1",
         "dealerdirect/phpcodesniffer-composer-installer": "0.7.0",
