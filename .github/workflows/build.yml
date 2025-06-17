@@ -15,8 +15,7 @@ jobs:
 
       - name: Clean environment
         run: |
-          rm -f composer.lock
-          rm -rf vendor
+          rm -rf vendor composer.lock
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -26,26 +25,33 @@ jobs:
           tools: composer
           extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json, phar
 
-      - name: Setup Composer
-        run: |
-          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
-          composer config platform.php 7.3
-          composer config discard-changes true
-
       - name: Install dependencies
         run: |
-          composer require "easyengine/site-command:dev-develop" --no-update
           composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
+          composer dump-autoload --optimize --classmap-authoritative
 
-      - name: Fix potential path issues
+      - name: Prepare for PHAR build
         run: |
-          find vendor -type f -name "*.php" -exec sed -i 's/__DIR__/dirname(__DIR__)/g' {} +
+          mkdir -p phar-temp
+          cp -r php vendor bin utils VERSION phar-temp/
+          # Fix path issues
+          sed -i "s|__DIR__.'/../vendor|__DIR__.'/vendor|g" phar-temp/vendor/autoload.php
 
-      - name: Build Phar with proper includes
+      - name: Build PHAR
         run: |
-          php -dphar.readonly=0 utils/make-phar.php easyengine.phar --no-compression
+          cd phar-temp
+          php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar
           chmod +x easyengine.phar
+          mv easyengine.phar ../
+          cd ..
 
-      - name: Validate Phar
+      - name: Test PHAR
         run: |
           php easyengine.phar cli info
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: easyengine-custom.phar
+          path: easyengine.phar
+          retention-days: 5
