@@ -55,7 +55,7 @@
     {
         "type": "vcs",
         "url": "https://github.com/dinhngocdng/site-command.git",
-        "no-api": true  // Bắt buộc sử dụng HTTPS thay vì API
+        "no-api": true
     }
 ],
     "require-dev": {
