@@ -45,14 +45,14 @@ jobs:
       - name: Install dependencies
         run: |
           cd "$GITHUB_WORKSPACE"
-          # Chuyển sang sử dụng git thay vì https
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
           
-          # Cài đặt SSH key mặc định của GitHub Actions
+          # Sử dụng SSH key mặc định của GitHub Actions
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           
-          # Cài đặt dependencies
+          # Cấu hình Composer
+          composer config -g github-protocols ssh
           composer update easyengine/site-command --no-dev --no-progress --no-interaction
           composer install --no-dev --no-progress --no-interaction
 
@@ -136,14 +136,14 @@ jobs:
     - name: Install dependencies
       run: |
         cd "$GITHUB_WORKSPACE"
-        # Chuyển sang sử dụng git thay vì https
-        git config --global url."git@github.com:".insteadOf "https://github.com/"
         
-        # Cài đặt SSH key mặc định của GitHub Actions
+        # Sử dụng SSH key mặc định của GitHub Actions
+        git config --global url."git@github.com:".insteadOf "https://github.com/"
         mkdir -p ~/.ssh
         ssh-keyscan github.com >> ~/.ssh/known_hosts
         
-        # Cài đặt dependencies
+        # Cấu hình Composer
+        composer config -g github-protocols ssh
         composer update easyengine/site-command --no-dev --no-progress --no-interaction
         composer install --no-dev --no-progress --no-interaction
 
