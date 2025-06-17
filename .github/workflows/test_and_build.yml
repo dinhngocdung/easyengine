@@ -53,8 +53,9 @@ jobs:
           
           # Cấu hình Composer
           composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config -g github-protocols https
           
-          # Xóa cache cũ
+          # Xóa cache cũ để tránh conflict
           rm -rf ~/.cache/composer/vcs/*
           
           # Cài đặt dependencies
@@ -149,8 +150,9 @@ jobs:
         
         # Cấu hình Composer
         composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+        composer config -g github-protocols https
         
-        # Xóa cache cũ
+        # Xóa cache cũ để tránh conflict
         rm -rf ~/.cache/composer/vcs/*
         
         # Cài đặt dependencies
