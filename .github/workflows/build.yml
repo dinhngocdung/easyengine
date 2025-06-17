@@ -42,10 +42,10 @@ jobs:
           mkdir -p phar-build
           cp -r php bin utils VERSION vendor phar-build/
 
-      - name: Build PHAR
+      - name: Build uncompressed PHAR
         run: |
           cd phar-build
-          php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar
+          php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar --no-compression
           chmod +x easyengine.phar
           mv easyengine.phar ../
           cd ..
@@ -54,9 +54,9 @@ jobs:
         run: |
           php easyengine.phar cli info
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload PHAR as release asset
+        uses: softprops/action-gh-release@v1
+        if: success()
         with:
-          name: easyengine-custom.phar
-          path: easyengine.phar
-          retention-days: 5
+          files: easyengine.phar
+          token: ${{ secrets.GITHUB_TOKEN }}
