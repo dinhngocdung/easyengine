@@ -41,16 +41,18 @@ jobs:
         with:
           path: vendor
           key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.json') }}
+
       - name: Install dependencies
-        env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
           cd "$GITHUB_WORKSPACE"
-          # Đảm bảo sử dụng HTTPS và token xác thực
-          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          # Chuyển sang sử dụng git thay vì https
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          
+          # Cài đặt SSH key mặc định của GitHub Actions
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
           
           # Cài đặt dependencies
-          composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
           composer update easyengine/site-command --no-dev --no-progress --no-interaction
           composer install --no-dev --no-progress --no-interaction
 
@@ -132,15 +134,16 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     - name: Install dependencies
-      env:
-        COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
       run: |
         cd "$GITHUB_WORKSPACE"
-        # Đảm bảo sử dụng HTTPS và token xác thực
-        git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+        # Chuyển sang sử dụng git thay vì https
+        git config --global url."git@github.com:".insteadOf "https://github.com/"
+        
+        # Cài đặt SSH key mặc định của GitHub Actions
+        mkdir -p ~/.ssh
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
         
         # Cài đặt dependencies
-        composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
         composer update easyengine/site-command --no-dev --no-progress --no-interaction
         composer install --no-dev --no-progress --no-interaction
 
