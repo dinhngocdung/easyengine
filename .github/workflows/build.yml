@@ -25,6 +25,12 @@ jobs:
           tools: composer
           extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json, phar
 
+      - name: Setup Composer authentication
+        run: |
+          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config --global --auth github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config -g repo.packagist composer https://packagist.org
+
       - name: Install dependencies
         run: |
           composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
@@ -32,14 +38,13 @@ jobs:
 
       - name: Prepare for PHAR build
         run: |
-          mkdir -p phar-temp
-          cp -r php vendor bin utils VERSION phar-temp/
-          # Fix path issues
-          sed -i "s|__DIR__.'/../vendor|__DIR__.'/vendor|g" phar-temp/vendor/autoload.php
+          # Copy required files to temporary directory
+          mkdir -p phar-build
+          cp -r php bin utils VERSION vendor phar-build/
 
       - name: Build PHAR
         run: |
-          cd phar-temp
+          cd phar-build
           php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar
           chmod +x easyengine.phar
           mv easyengine.phar ../
