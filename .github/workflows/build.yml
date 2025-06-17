@@ -13,7 +13,7 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
 
-      - name: Clean up composer files
+      - name: Clean environment
         run: |
           rm -f composer.lock
           rm -rf vendor
@@ -24,29 +24,28 @@ jobs:
           php-version: '8.3'
           coverage: none
           tools: composer
-          extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json
+          extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json, phar
 
-      - name: Setup Composer authentication
-        run: composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Composer
+        run: |
+          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          composer config platform.php 7.3
+          composer config discard-changes true
 
       - name: Install dependencies
         run: |
           composer require "easyengine/site-command:dev-develop" --no-update
-          composer update --prefer-dist --no-progress --no-interaction --with-all-dependencies
+          composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
 
-      - name: Set custom version
+      - name: Fix potential path issues
         run: |
-          echo "4.0.0-custom-$(date +%Y%m%d)-$(git rev-parse --short HEAD)" > VERSION
+          find vendor -type f -name "*.php" -exec sed -i 's/__DIR__/dirname(__DIR__)/g' {} +
 
-      - name: Build Phar
-        run: php -dphar.readonly=0 utils/make-phar.php easyengine.phar
+      - name: Build Phar with proper includes
+        run: |
+          php -dphar.readonly=0 utils/make-phar.php easyengine.phar --no-compression
+          chmod +x easyengine.phar
 
-      - name: Test Phar
-        run: php easyengine.phar --info
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: easyengine-custom.phar
-          path: easyengine.phar
-          retention-days: 5
+      - name: Validate Phar
+        run: |
+          php easyengine.phar cli info
