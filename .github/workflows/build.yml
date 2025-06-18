@@ -59,7 +59,7 @@ jobs:
         run: |
           DATE=$(date +%Y%m%d)
           COMMIT_SHORT=$(git rev-parse --short HEAD)
-          echo "TAG=v4.0.0-custom-$DATE-$COMMIT_SHORT" >> $GITHUB_OUTPUT
+          echo "TAG=v4.8.1-custom-$DATE-$COMMIT_SHORT" >> $GITHUB_OUTPUT
           git tag $TAG
           git push origin $TAG
 
