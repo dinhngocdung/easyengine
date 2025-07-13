@@ -54,14 +54,20 @@ jobs:
         run: |
           php easyengine.phar cli info
 
+      # Bước mới: Đọc nội dung file VERSION
+      - name: Read VERSION file content
+        id: get_version
+        run: echo "VERSION_CONTENT=$(cat VERSION)" >> $GITHUB_OUTPUT
+
       - name: Create Git tag
         id: tag
         run: |
-          DATE=$(date +%Y%m%d)
-          COMMIT_SHORT=$(git rev-parse --short HEAD)
-          echo "TAG=v4.0.0-custom-$DATE-$COMMIT_SHORT" >> $GITHUB_OUTPUT
-          git tag $TAG
-          git push origin $TAG
+          # Sử dụng nội dung từ file VERSION và thêm "-custom"
+          VERSION_FROM_FILE="${{ steps.get_version.outputs.VERSION_CONTENT }}"
+          TAG_NAME="${VERSION_FROM_FILE}-custom"
+          echo "TAG=${TAG_NAME}" >> $GITHUB_OUTPUT
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
