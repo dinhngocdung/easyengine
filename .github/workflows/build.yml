@@ -42,8 +42,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clean vendor directory
-        run: rm -rf vendor
+      - name: Install dependencies
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: 1
+        run: |
+          composer config --json --merge policy.advisories.ignore "$ADVISORY_IGNORE"
+          composer update \
+            --prefer-dist \
+            --no-dev \
+            --no-progress \
+            --no-interaction \
+            --optimize-autoloader
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
