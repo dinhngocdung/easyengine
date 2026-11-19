@@ -41,6 +41,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+    
+      - name: Setup Composer authentication
+        run: |
+          composer config --global github-oauth.github.com \
+            "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install dependencies
         env:
