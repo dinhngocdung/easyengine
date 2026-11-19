@@ -1,82 +1,147 @@
 name: Build Custom EasyEngine
 
 on:
-  # push:
-  #  branches: [ "master" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ADVISORY_IGNORE: >-
+    {
+      "symfony/config": {
+        "constraint": "4.4.*",
+        "reason": "Legacy dependency pinned by EasyEngine",
+        "on-audit": false
+      },
+      "symfony/yaml": {
+        "constraint": "4.4.*",
+        "reason": "Legacy dependency pinned by EasyEngine",
+        "on-audit": false
+      },
+      "symfony/serializer": {
+        "constraint": "3.4.20",
+        "reason": "Legacy dependency pinned by site-command",
+        "on-audit": false
+      },
+      "guzzlehttp/psr7": {
+        "constraint": "1.9.*",
+        "reason": "Legacy dependency required by acmephp/core",
+        "on-audit": false
+      }
+    }
 
 jobs:
   build:
     name: Build Phar
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Clean environment
-        run: |
-          rm -rf vendor composer.lock
+      - name: Clean vendor directory
+        run: rm -rf vendor
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
           tools: composer
-          extensions: pcntl, curl, sqlite3, zip, dom, mbstring, json, phar
+          extensions: pcntl,curl,sqlite3,zip,dom,mbstring,json,phar
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Composer caching
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Verify locked dependencies
+        run: |
+          test -f composer.lock || {
+            echo "::error::composer.lock is missing."
+            exit 1
+          }
 
       - name: Setup Composer authentication
         run: |
-          composer config -g github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
-          composer config --global --auth github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
-          composer config -g repo.packagist composer https://packagist.org
-      - name: Install dependencies
+          composer config --global github-oauth.github.com \
+            "${{ secrets.GITHUB_TOKEN }}"
+          composer config --global repo.packagist composer \
+            https://packagist.org
+
+      - name: Configure legacy Composer advisories
         run: |
-          composer install --prefer-dist --no-dev --no-progress --no-interaction --optimize-autoloader
-          composer dump-autoload --optimize --classmap-authoritative
+          composer config --json --merge policy.advisories.ignore \
+            "$ADVISORY_IGNORE"
+          composer config audit.block-insecure false
+
+      - name: Install dependencies
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: 1
+        run: |
+          composer install \
+            --prefer-dist \
+            --no-dev \
+            --no-progress \
+            --no-interaction \
+            --optimize-autoloader
+          composer dump-autoload \
+            --optimize \
+            --classmap-authoritative
+
       - name: Prepare for PHAR build
         run: |
-          # Copy required files to temporary directory
           mkdir -p phar-build
           cp -r php bin utils VERSION vendor phar-build/
+
       - name: Build uncompressed PHAR
         run: |
           cd phar-build
-          php -dphar.readonly=0 ../utils/make-phar.php easyengine.phar --no-compression
+          php -dphar.readonly=0 \
+            ../utils/make-phar.php \
+            easyengine.phar \
+            --no-compression
           chmod +x easyengine.phar
           mv easyengine.phar ../
           cd ..
+
       - name: Test PHAR
-        run: |
-          php easyengine.phar cli info
-          
-      # Bước mới: Đọc nội dung file VERSION
+        run: php easyengine.phar cli info
+
       - name: Read VERSION file content
         id: get_version
-        run: echo "VERSION_CONTENT=$(cat VERSION)" >> $GITHUB_OUTPUT
-
-      - name: Create Git tag
-        id: tag
         run: |
-          # Lấy version từ file
-          VERSION_FROM_FILE="${{ steps.get_version.outputs.VERSION_CONTENT }}"
-          TAG_NAME="${VERSION_FROM_FILE}-custom"
-          echo "TAG=${TAG_NAME}" >> $GITHUB_OUTPUT
-          
-          # Cấu hình Git để có thể thực hiện lệnh tag
+          VERSION_CONTENT="$(cat VERSION | xargs)"
+          echo "VERSION_CONTENT=$VERSION_CONTENT" >> "$GITHUB_OUTPUT"
+
+      - name: Create or replace Git tag
+        id: tag
+        env:
+          VERSION_CONTENT: ${{ steps.get_version.outputs.VERSION_CONTENT }}
+        run: |
+          TAG_NAME="${VERSION_CONTENT}-custom"
+          echo "TAG=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Xóa tag cục bộ nếu có
-          git tag -d "${TAG_NAME}" || true
-          
-          # Tạo tag mới
-          git tag "${TAG_NAME}"
-          
-          # Đẩy tag lên Remote (sử dụng --force để ghi đè nếu tag đã tồn tại)
-          git push origin "${TAG_NAME}" --force
+          git tag -d "$TAG_NAME" 2>/dev/null || true
+          git tag "$TAG_NAME"
+          git push origin "refs/tags/$TAG_NAME" --force
 
-      - name: Create / Update Release
-        uses: softprops/action-gh-release@v1
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
           files: easyengine.phar
