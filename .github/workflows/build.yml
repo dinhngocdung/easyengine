@@ -9,29 +9,14 @@ permissions:
 env:
   ADVISORY_IGNORE: >-
     {
-      "symfony/yaml": {
-        "constraint": "4.4.*",
-        "reason": "Pinned by EasyEngine and behat/behat 3.8.1",
-        "on-audit": false
-      },
-      "guzzlehttp/psr7": {
-        "constraint": "1.9.*",
-        "reason": "Required by acmephp/core 1.3.0",
-        "on-audit": false
-      },
-      "guzzlehttp/guzzle": {
-        "constraint": "7.8.*",
-        "reason": "Last Guzzle 7 line compatible with guzzlehttp/psr7 1.x",
-        "on-audit": false
-      },
       "symfony/config": {
         "constraint": "4.4.*",
-        "reason": "Pinned by EasyEngine and behat/behat 3.8.1",
+        "reason": "Legacy dependency pinned by EasyEngine",
         "on-audit": false
       },
-      "symfony/serializer": {
-        "constraint": "3.4.20",
-        "reason": "Pinned by site-command",
+      "symfony/yaml": {
+        "constraint": "4.4.*",
+        "reason": "Legacy dependency pinned by EasyEngine",
         "on-audit": false
       }
     }
@@ -109,6 +94,9 @@ jobs:
           mv easyengine.phar ../
           cd ..
 
+      - name: Test PHAR
+        run: php easyengine.phar cli info
+
       - name: Read VERSION file content
         id: get_version
         run: |
@@ -129,7 +117,6 @@ jobs:
 
           git tag -d "$TAG_NAME" 2>/dev/null || true
           git tag "$TAG_NAME"
-
           git push origin "refs/tags/$TAG_NAME" --force
 
       - name: Create or update release
