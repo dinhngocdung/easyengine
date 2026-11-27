@@ -682,9 +682,9 @@ LOGROTATE
     delaycompress
     notifempty
     sharedscripts
+    copytruncate
     postrotate
-        docker ps -q -f label=io.easyengine.site -f label=com.docker.compose.service=nginx | xargs -r docker kill -s USR1 >/dev/null || true
-        docker ps -q -f label=io.easyengine.site -f label=com.docker.compose.service=php | xargs -r docker kill -s USR1 >/dev/null || true
+        echo "$(date '+[%d/%m/%Y %H:%M:%S]') LogRotate.INFO: Daily rotate site logs" >> {$root_dir}/logs/ee.log || true
     endscript
 }
 LOGROTATE
@@ -713,8 +713,9 @@ LOGROTATE
     delaycompress
     notifempty
     sharedscripts
+    copytruncate
     postrotate
-        docker ps -q -f label=com.docker.compose.service=global-nginx-proxy | xargs -r -I{} docker exec {} nginx -s reopen >/dev/null || true
+        echo "$(date '+[%d/%m/%Y %H:%M:%S]') LogRotate.INFO: Daily rotate nginx-proxy logs" >> {$root_dir}/logs/ee.log || true
     endscript
 }
 LOGROTATE
